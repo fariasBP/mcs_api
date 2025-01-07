@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"mcs_api/src/config"
 	"mcs_api/src/middlewares"
 	"mcs_api/src/models"
@@ -11,6 +12,7 @@ import (
 )
 
 func Login(c echo.Context) error {
+	fmt.Println("In Login")
 	// obteniendo variables de request
 	body := &validations.LoginParams{}
 	d := c.Request().Body
@@ -22,7 +24,7 @@ func Login(c echo.Context) error {
 		return c.JSON(500, config.SetResError(500, "No se pudo encontrar al usuario", err.Error()))
 	}
 	// comparando contraseñas
-	if user.Pwd != body.Pwd {
+	if !middlewares.CheckPasswordHash(body.Pwd, user.Pwd) {
 		return c.JSON(401, config.SetResError(401, "Contraseña incorrecta", ""))
 	}
 	// creando token
@@ -35,7 +37,7 @@ func Login(c echo.Context) error {
 }
 func SignUp(c echo.Context) error {
 	// obteniendo variables de request
-	body := &models.User{}
+	body := &validations.SignUpParams{}
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
@@ -43,8 +45,13 @@ func SignUp(c echo.Context) error {
 	if models.ExistsUser(body.IdName, body.Email) {
 		return c.JSON(400, config.SetResError(400, "User already exists", ""))
 	}
+	// encriptando contrraseña
+	hashPwd, err := middlewares.HashPassword(body.Pwd)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo encriptar la contraseña", err.Error()))
+	}
 	// creando usuario
-	err := models.CreateUser(body.IdName, body.Name, body.Lname, body.Email, body.Pwd, body.Bth)
+	err = models.CreateUser(body.IdName, body.Name, body.Lname, body.Email, hashPwd, body.Bth)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "Internal Server Error", err.Error()))
 	}

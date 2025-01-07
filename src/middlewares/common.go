@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type JwtCustomClaims struct {
@@ -31,9 +32,13 @@ func Initialization() error {
 		email, _ := os.LookupEnv("EMAIL")
 		password, _ := os.LookupEnv("PASSWORD")
 		birthday, _ := os.LookupEnv("BIRTHDAY")
-		errc := models.CreateSuperUser(identifier, name, lastname, email, password, birthday)
-		if errc != nil {
-			return errc
+		hashPwd, err := HashPassword(password)
+		if err != nil {
+			return err
+		}
+		err = models.CreateSuperUser(identifier, name, lastname, email, hashPwd, birthday)
+		if err != nil {
+			return err
 		}
 		fmt.Println("SuperUser created")
 	}
@@ -41,7 +46,7 @@ func Initialization() error {
 }
 func CreateToken(id string) (string, time.Time, error) {
 	// obteniendo variables de entorno
-	secretVal, _ := os.LookupEnv("SECRET_JWT")
+	secretVal, _ := os.LookupEnv("SECRET")
 	durationVal, _ := os.LookupEnv("DURATION_JWT")
 	// convirtiendo a entero la duracion
 	duration, err := strconv.Atoi(durationVal)
@@ -72,7 +77,7 @@ func ValidateToken(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(401, config.SetRes(401, "No se ha proporcionado el token de acceso"))
 		}
 		// obteniendo variables de entorno secret
-		secretVal, _ := os.LookupEnv("SECRET_JWT")
+		secretVal, _ := os.LookupEnv("SECRET")
 		// parseando token
 		claims := &JwtCustomClaims{}
 		token, err := jwt.ParseWithClaims(tkn, claims, func(token *jwt.Token) (interface{}, error) {
@@ -87,4 +92,15 @@ func ValidateToken(next echo.HandlerFunc) echo.HandlerFunc {
 		// retornando token
 		return next(c)
 	}
+}
+
+// hash password
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

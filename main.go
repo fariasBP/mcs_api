@@ -21,6 +21,14 @@ func main() {
 		// estableciendo rutas
 		router := e.Group("/api")
 		routes.Auth(router)
+		// routes.Permissions(router)
+		routes.MachineType(router)
+		routes.Brand(router)
+		routes.Companies(router)
+		routes.Machine(router)
+		routes.Protocol(router)
+		routes.Service(router)
+		routes.Pdfs(router)
 		// iniciando server
 		portApi, _ := os.LookupEnv("PORT")
 		e.Logger.Fatal(e.Start(":" + portApi))

@@ -78,6 +78,18 @@ func ExistsUser(idName, email string) bool {
 	return err == nil
 }
 
+func ExistsUserById(idStr string) bool {
+	ctx, client, coll := config.ConnectColl("users")
+	defer client.Disconnect(ctx)
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		return false
+	}
+	user := &User{}
+	err = coll.FindOne(ctx, bson.M{"_id": id}).Decode(user)
+	return err == nil
+}
+
 func GetUser(identifier string) (*User, error) {
 	ctx, client, coll := config.ConnectColl("users")
 	defer client.Disconnect(ctx)
