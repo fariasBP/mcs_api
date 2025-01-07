@@ -1,0 +1,20 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/company/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Lika'Desgin",
+    "manager": "Ross Mary",
+    "location": "-16.553189738114, -68.18980074867446",
+    "description": "empresa de confeccions de ropa para medicina"
+  }
+}

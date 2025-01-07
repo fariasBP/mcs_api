@@ -1,0 +1,17 @@
+meta {
+  name: GetMachines
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{HOST_URL}}/machine/machines?name&limit=3&page=1
+  body: none
+  auth: none
+}
+
+params:query {
+  name: 
+  limit: 3
+  page: 1
+}

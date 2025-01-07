@@ -1,0 +1,17 @@
+meta {
+  name: GetCompanies
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{HOST_URL}}/company/companies?name&limit=5&page=1
+  body: none
+  auth: none
+}
+
+params:query {
+  name: 
+  limit: 5
+  page: 1
+}

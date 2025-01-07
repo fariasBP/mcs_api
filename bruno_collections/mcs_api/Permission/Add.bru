@@ -1,0 +1,18 @@
+meta {
+  name: Add
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/permission/add
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id_user": "29hsdi82hgaikosfa",
+    "permission": "5983jas9fhya932"
+  }
+}
