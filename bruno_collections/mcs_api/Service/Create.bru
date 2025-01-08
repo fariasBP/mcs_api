@@ -1,0 +1,65 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/service/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "machine_id": "677c903ff81ad339af1ac442",
+    "comments": "",
+    "started_at": "2025-01-04 02:16:45",
+    "ended_at": "2025-01-05 02:16:39.055",
+    "status": 0,
+    "materials": [
+      {
+        "name": "buje",
+        "number": 1,
+        "price": 45.5
+      },
+      {
+        "name": "resorte",
+        "number": 2,
+        "price": 12.0
+      }
+    ],
+    "protocols": [
+      {
+        "protocol_id": "677c8b7c4b37953df2bb3665",
+        "status": 1,
+        "note": "Se puede trabajar, sin embargo la mesa ya esta vieja y puede molestar cuando atasca tela.",
+        "problems": [
+          {
+            "problem": "Caja ya gastada.",
+            "solution": "Se cambio de caja."
+          },
+          {
+            "problem": "Buje de barra de aguja ya ancheado (desgastado).",
+            "solution": "Se cambio de buje de barra de aguja"
+          }
+        ]
+      },
+      {
+        "protocol_id": "677c89ea06a6b72a24c401c8",
+        "status": 1,
+        "note": "",
+        "problems": [
+          {
+            "problem": "Tornillos faltantes y dañados.",
+            "solution": "Se cambio y completo tornillos."
+          },
+          {
+            "problem": "Mueble ya viejo, astillas atascan hilo.",
+            "solution": "No solucionado."
+          }
+        ]
+      }
+    ]
+  }
+}

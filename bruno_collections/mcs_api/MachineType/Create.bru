@@ -1,0 +1,18 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/machinetype/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "plancha industrial",
+    "description": "maquina para planchar"
+  }
+}

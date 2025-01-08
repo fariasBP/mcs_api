@@ -1,0 +1,22 @@
+meta {
+  name: singup
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{HOST_URL}}/auth/signup
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id_name": "juancho",
+    "name": "juan",
+    "lname": "luna",
+    "email": "juan@gmail.com",
+    "pwd": "1234",
+    "bth": "2008-10-22"
+  }
+}

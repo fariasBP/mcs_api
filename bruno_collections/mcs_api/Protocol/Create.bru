@@ -1,0 +1,19 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/protocol/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "acronym": "p8",
+    "name": "Mecanismo de formación de punto",
+    "description": "Componentes como: garfios, varilla de aguja, protectores de aguja, soporte de garfios, etc."
+  }
+}

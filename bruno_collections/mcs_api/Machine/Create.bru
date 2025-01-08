@@ -1,0 +1,21 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST_URL}}/machine/create
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "company_id": "677c885406a6b72a24c401a6",
+    "machine_type_id": "677c891606a6b72a24c401b8",
+    "brand_id": "677c87e306a6b72a24c40199",
+    "serial": "16846467464",
+    "model": "JKSO-934"
+  }
+}
