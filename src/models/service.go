@@ -53,7 +53,6 @@ func CreateService(machineId, comments string, startedAt, endedAt time.Time, pro
 }
 
 func ExistsServiceById(id string) bool {
-	fmt.Println(id)
 	ctx, client, coll := config.ConnectColl("service")
 	defer client.Disconnect(ctx)
 	idObj, err := primitive.ObjectIDFromHex(id)
