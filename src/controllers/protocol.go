@@ -16,7 +16,7 @@ func CreateProtocol(c echo.Context) error {
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
 	// verificando que no exista la marca
-	if models.ExistsProtocol(body.Acronym, body.Name) {
+	if models.ExistsProtocol(body.Name, body.Acronym) {
 		return c.JSON(400, config.SetResError(400, "El protocolo ya existe", ""))
 	}
 	// creando marca

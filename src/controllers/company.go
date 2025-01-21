@@ -22,7 +22,7 @@ func CreateCompany(c echo.Context) error {
 		return c.JSON(400, config.SetResError(400, "la empresa ya existe", ""))
 	}
 	// creando empresa
-	err := models.CreateCompany(body.Name, body.Manager, body.Location, body.Description)
+	err := models.CreateCompany(body.Name, body.Manager, body.Location, body.Description, body.Contact)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "no se creo la empresa", err.Error()))
 	}

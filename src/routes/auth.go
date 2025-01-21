@@ -8,6 +8,6 @@ import (
 
 func Auth(e *echo.Group) {
 	router := e.Group("/auth")
-	router.GET("/login", controllers.Login)
+	router.POST("/login", controllers.Login)
 	router.POST("/signup", controllers.SignUp)
 }

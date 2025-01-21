@@ -1,7 +1,9 @@
 package middlewares
 
 import (
+	"fmt"
 	"mcs_api/src/models"
+	"strconv"
 
 	"github.com/jung-kurt/gofpdf"
 )
@@ -70,12 +72,13 @@ func CreateServicePdf(company *models.Company, machine *models.Machine, service 
 	pdf.CellFormat(20, 8, "Cantidad", "1", 0, "C", false, 0, "")
 	pdf.CellFormat(120, 8, "Material", "1", 0, "C", false, 0, "")
 	pdf.CellFormat(50, 8, "Costo Bs.", "1", 1, "C", false, 0, "")
-	for i := 0; i < 6; i++ {
-		pdf.CellFormat(20, 8, "5", "1", 0, "C", false, 0, "")
-		pdf.CellFormat(120, 8, "Garfios", "1", 0, "L", false, 0, "")
-		pdf.CellFormat(50, 8, "45.0", "1", 1, "C", false, 0, "")
+	for _, v := range service.Materials {
+		fmt.Println(v.Price)
+		fmt.Println(strconv.FormatFloat(v.Price, 'f', -1, 64))
+		pdf.CellFormat(20, 8, strconv.Itoa(v.Number), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(120, 8, v.Name, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(50, 8, strconv.FormatFloat(v.Price, 'f', -1, 64), "1", 1, "C", false, 0, "")
 	}
-
 	// Firmas
 	pdf.Ln(5)
 	pdf.CellFormat(95, 8, "FIRMA CLIENTE:", "0", 0, "L", false, 0, "")

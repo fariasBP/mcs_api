@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -21,9 +22,9 @@ type ProtocolData struct {
 	Problems []Problem             `json:"problems" bson:"problems,omitempty"`
 }
 type Material struct {
-	Name   string `json:"name" bson:"name,omitempty"`
-	Price  int    `json:"price" bson:"price,omitempty"`
-	Number int    `json:"number" bson:"number,omitempty"`
+	Name   string  `json:"name" bson:"name,omitempty"`
+	Price  float64 `json:"price" bson:"price,omitempty"`
+	Number int     `json:"number" bson:"number,omitempty"`
 }
 type Service struct {
 	ID        primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
@@ -75,4 +76,43 @@ func GetServiceById(id string) (*Service, error) {
 	service := &Service{}
 	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(service)
 	return service, err
+}
+
+func GetServices(machine_id, endedAt string, limit, page int) ([]Service, int64, error) {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("service")
+	defer client.Disconnect(ctx)
+
+	// creando parametros de consulta
+	opts := options.Find().SetSort(bson.M{"ended_at": -1}).SetLimit(int64(limit)).SetSkip(int64(page - 1))
+	query := bson.M{"machine_id": machine_id}
+	if endedAt != "" {
+		// trabajando en fechas
+		ended, err := time.Parse(time.DateTime, endedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		// creando query con ended
+		query = bson.M{"$and": []bson.M{
+			{"machine_id": machine_id},
+			{"ended_at": bson.M{"$lte": primitive.NewDateTimeFromTime(ended.UTC())}},
+		}}
+	}
+	// consultando cantidad de datos
+	count, err := coll.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+	// consultando
+	cursor, err := coll.Find(ctx, query, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+	// modelando datos
+	var services []Service
+	if err = cursor.All(ctx, &services); err != nil {
+		return nil, 0, err
+	}
+	return services, count, nil
 }

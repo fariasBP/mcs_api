@@ -9,4 +9,5 @@ import (
 func Service(e *echo.Group) {
 	router := e.Group("/service")
 	router.POST("/create", controllers.CreateService)
+	router.GET("/services", controllers.GetServices)
 }

@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"mcs_api/src/config"
 	"mcs_api/src/models"
 	"mcs_api/src/validations"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -50,8 +50,7 @@ func CreateService(c echo.Context) error {
 			}
 		}
 	}
-	fmt.Println(body.StartedAt)
-	// se trabaja en fechas
+	// trabajando en fechas
 	started, err := time.Parse(time.DateTime, body.StartedAt)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se puede parsear la fecha 'started_at'", err.Error()))
@@ -67,4 +66,32 @@ func CreateService(c echo.Context) error {
 	}
 
 	return c.JSON(200, config.SetRes(200, "El servicio se ha creado"))
+}
+
+func GetServices(c echo.Context) error {
+	// obteniendo params
+	machineId := c.QueryParam("machine_id")
+	endedAt := c.QueryParam("ended_at")
+	limit := c.QueryParam("limit")
+	page := c.QueryParam("page")
+	// convirtiendo params
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 10
+	}
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		pageInt = 1
+	}
+	// verificando que la maquina existe
+	if !models.ExistsMachineById(machineId) {
+		return c.JSON(400, config.SetResError(400, "La maquina no existe", ""))
+	}
+	// consultando
+	services, count, err := models.GetServices(machineId, endedAt, limitInt, pageInt)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo obtener los servicios", err.Error()))
+	}
+
+	return c.JSON(200, config.SetResJsonCount(200, "Los servicios se han obtenido", count, services))
 }

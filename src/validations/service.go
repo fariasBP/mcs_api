@@ -6,9 +6,9 @@ type (
 		Solution string `json:"solution" validate:"required"`
 	}
 	MaterialParams struct {
-		Name   string `json:"name" validate:"required"`
-		Number int    `json:"number" validate:"required"`
-		Price  int    `json:"price" validate:"required"`
+		Name   string  `json:"name" validate:"required"`
+		Number int     `json:"number" validate:"required"`
+		Price  float64 `json:"price" validate:"required"`
 	}
 	ProtocolParams struct {
 		ProtocolId string          `json:"protocol_id" validate:"required"`

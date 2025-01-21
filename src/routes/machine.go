@@ -9,4 +9,5 @@ import (
 func Machine(e *echo.Group) {
 	router := e.Group("/machine")
 	router.POST("/create", controllers.CreateMachine)
+	router.GET("/machines", controllers.GetMachinesByCompanyId)
 }

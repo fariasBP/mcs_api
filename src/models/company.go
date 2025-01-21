@@ -17,9 +17,10 @@ type Company struct {
 	Manager     string             `json:"manager" bson:"manager,omitempty"`
 	Location    string             `json:"location" bson:"location,omitempty"`
 	Description string             `json:"description" bson:"description,omitempty"`
+	Contact     string             `json:"contact" bson:"contact,omitempty"`
 }
 
-func CreateCompany(name, manager, location, description string) error {
+func CreateCompany(name, manager, location, description, contact string) error {
 	ctx, client, coll := config.ConnectColl("companies")
 	defer client.Disconnect(ctx)
 	newCompany := &Company{
@@ -29,6 +30,7 @@ func CreateCompany(name, manager, location, description string) error {
 		Manager:     manager,
 		Location:    location,
 		Description: description,
+		Contact: contact,
 	}
 	_, err := coll.InsertOne(ctx, newCompany)
 	return err

@@ -36,7 +36,7 @@ func ExistsProtocol(name, acronym string) bool {
 	ctx, client, coll := config.ConnectColl("protocol")
 	defer client.Disconnect(ctx)
 	protocol := &Protocol{}
-	err := coll.FindOne(ctx, bson.M{"or": []bson.M{
+	err := coll.FindOne(ctx, bson.M{"$or": []bson.M{
 		{"name": name},
 		{"acronym": acronym},
 	}}).Decode(protocol)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -58,4 +59,38 @@ func GetMachineById(id string) (*Machine, error) {
 	machine := &Machine{}
 	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(machine)
 	return machine, err
+}
+
+func GetMachinesByCompanyId(companyId, serial string, limit, page int) ([]Machine, int64, error) {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("machine")
+	defer client.Disconnect(ctx)
+	// creando parametros de consulta
+	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
+	query := bson.M{"company_id": companyId}
+	if serial != "" {
+		query = bson.M{"$and": []bson.M{
+			{"company_id": companyId},
+			{"serial": primitive.Regex{
+				Pattern: `(\s` + serial + `|^` + serial + `|\w` + serial + `\w` + `|` + serial + `$` + `|` + serial + `\s)`, Options: "i",
+			}},
+		}}
+	}
+	// consultando cantidad de datos
+	count, err := coll.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+	// consultando
+	cursor, err := coll.Find(ctx, query, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+	// modelando datos
+	var machines []Machine
+	if err = cursor.All(ctx, &machines); err != nil {
+		return nil, 0, err
+	}
+	return machines, count, nil
 }

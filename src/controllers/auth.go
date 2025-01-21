@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"mcs_api/src/config"
 	"mcs_api/src/middlewares"
 	"mcs_api/src/models"
@@ -12,7 +11,6 @@ import (
 )
 
 func Login(c echo.Context) error {
-	fmt.Println("In Login")
 	// obteniendo variables de request
 	body := &validations.LoginParams{}
 	d := c.Request().Body
