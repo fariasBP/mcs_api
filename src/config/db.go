@@ -39,17 +39,3 @@ func ConnectColl(collectionName string) (context.Context, *mongo.Client, *mongo.
 	coll := db.Collection(collectionName)
 	return ctx, client, coll
 }
-
-type StatusProtocol int
-type StatusService int
-
-const (
-	Operative   StatusProtocol = 0 // Operativo o en funcionamiento
-	Limited     StatusProtocol = 1 // Operacion limitada o funcionamiento parcial
-	NoOperative StatusProtocol = 2 // No Operativo o no en funcionamiento
-	Unknown     StatusProtocol = 3 // Desconocido o que no se sabe en que estado esta
-
-	Completed  StatusService = 0 // Completado o finalizado
-	InProgress StatusService = 1 // En progreso o en curso
-	Cancelled  StatusService = 2 // Cancelado o cancelado
-)

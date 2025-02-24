@@ -30,6 +30,18 @@ func CreateMachineType(name, description string) error {
 	return err
 }
 
+func GetMachineTypeById(id string) (*MachineType, error) {
+	ctx, client, coll := config.ConnectColl("machinetype")
+	defer client.Disconnect(ctx)
+	idObj, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	machineType := &MachineType{}
+	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(machineType)
+	return machineType, err
+}
+
 func ExistsMachineType(name string) bool {
 	ctx, client, coll := config.ConnectColl("machinetype")
 	defer client.Disconnect(ctx)

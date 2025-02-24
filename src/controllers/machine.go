@@ -33,7 +33,7 @@ func CreateMachine(c echo.Context) error {
 	return c.JSON(200, config.SetRes(200, "maquina creada"))
 }
 
-func GetMachinesByCompanyId(c echo.Context) error {
+func GetMachinesByCompanyIdAndSerial(c echo.Context) error {
 	// obteniendo params
 	companyId := c.QueryParam("company_id")
 	serial := c.QueryParam("serial")
@@ -49,10 +49,138 @@ func GetMachinesByCompanyId(c echo.Context) error {
 		pageInt = 1
 	}
 	// consultando
-	Machines, count, err := models.GetMachinesByCompanyId(companyId, serial, limitInt, pageInt)
+	Machines, count, err := models.GetMachinesByCompanyIdAndSerial(companyId, serial, limitInt, pageInt)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo obtener las maquinas", err.Error()))
 	}
 
 	return c.JSON(200, config.SetResJsonCount(200, "Las maquinas se han obtenido", count, Machines))
+}
+
+func GetMachinesBySerial(c echo.Context) error {
+	// obteniendo params
+	serial := c.QueryParam("serial")
+	limit := c.QueryParam("limit")
+	page := c.QueryParam("page")
+	// convirtiendo params
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 10
+	}
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		pageInt = 1
+	}
+	// consultando
+	machines, count, err := models.GetMachinesBySerial(serial, limitInt, pageInt)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo obtener las maquinas", err.Error()))
+	}
+
+	return c.JSON(200, config.SetResJsonCount(200, "Las maquinas se han obtenido", count, machines))
+}
+
+func GetMachinesRebuildBySerial(c echo.Context) error {
+	// obteniendo params
+	serial := c.QueryParam("serial")
+	limit := c.QueryParam("limit")
+	page := c.QueryParam("page")
+	// convirtiendo params
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 10
+	}
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		pageInt = 1
+	}
+	// consultando
+	machines, count, err := models.GetMachinesBySerial(serial, limitInt, pageInt)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo obtener las maquinas", err.Error()))
+	}
+	machinesRebuild := make([]models.MachineRebuild, len(machines))
+	for i, v := range machines {
+		company, err := models.GetCompanyById(v.CompanyId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener la empresa de la maquina serial#"+v.Serial, err.Error()))
+		}
+		companyName := company.Name
+		brand, err := models.GetBrandById(v.BrandId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener la marca de la maquina serial#"+v.Serial, err.Error()))
+		}
+		brandName := brand.Name
+		machineType, err := models.GetMachineTypeById(v.MachineTypeId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener el tipo de la maquina serial#"+v.Serial, err.Error()))
+		}
+		machineTypeName := machineType.Name
+
+		machinesRebuild[i] = models.MachineRebuild{
+			ID:          v.ID,
+			CreatedAt:   v.CreatedAt,
+			UpdatedAt:   v.UpdatedAt,
+			Company:     companyName,
+			MachineType: machineTypeName,
+			Brand:       brandName,
+			Serial:      v.Serial,
+			Model:       v.Model,
+			Services:    v.Services,
+		}
+	}
+
+	return c.JSON(200, config.SetResJsonCount(200, "Las maquinas se han obtenido", count, machinesRebuild))
+}
+
+func GetMachinesRebuildBasicBySerial(c echo.Context) error {
+	// obteniendo params
+	serial := c.QueryParam("serial")
+	limit := c.QueryParam("limit")
+	page := c.QueryParam("page")
+	// convirtiendo params
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 10
+	}
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		pageInt = 1
+	}
+	// consultando
+	machines, count, err := models.GetMachinesBySerial(serial, limitInt, pageInt)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo obtener las maquinas", err.Error()))
+	}
+	machinesRebuildBasic := make([]models.MachineRebuildBasic, len(machines))
+	for i, v := range machines {
+		company, err := models.GetCompanyById(v.CompanyId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener la empresa de la maquina serial#"+v.Serial, err.Error()))
+		}
+		companyName := company.Name
+		brand, err := models.GetBrandById(v.BrandId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener la marca de la maquina serial#"+v.Serial, err.Error()))
+		}
+		brandName := brand.Name
+		machineType, err := models.GetMachineTypeById(v.MachineTypeId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "No se pudo obtener el tipo de la maquina serial#"+v.Serial, err.Error()))
+		}
+		machineTypeName := machineType.Name
+
+		machinesRebuildBasic[i] = models.MachineRebuildBasic{
+			ID:          v.ID,
+			CreatedAt:   v.CreatedAt,
+			UpdatedAt:   v.UpdatedAt,
+			Company:     companyName,
+			MachineType: machineTypeName,
+			Brand:       brandName,
+			Serial:      v.Serial,
+			Model:       v.Model,
+		}
+	}
+
+	return c.JSON(200, config.SetResJsonCount(200, "Las maquinas se han obtenido", count, machinesRebuildBasic))
 }

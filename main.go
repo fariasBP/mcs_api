@@ -28,6 +28,8 @@ func main() {
 		routes.Machine(router)
 		routes.Protocol(router)
 		routes.Service(router)
+		routes.Material(router)
+		routes.Problem(router)
 		routes.Pdfs(router)
 		// iniciando server
 		portApi, _ := os.LookupEnv("PORT")

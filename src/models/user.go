@@ -12,7 +12,7 @@ type User struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	CreatedAt   primitive.DateTime `json:"created_at" bson:"created_at"`
 	UpdatedAt   primitive.DateTime `json:"updated_at" bson:"updated_at"`
-	IdName      string             `json:"id_name" bson:"id_name,omitempty"`
+	Nick        string             `json:"nick" bson:"nick,omitempty"`
 	Name        string             `json:"name" bson:"name,omitempty"`
 	Lname       string             `json:"lname" bson:"lname,omitempty"`
 	Email       string             `json:"email" bson:"email,omitempty"`
@@ -21,9 +21,9 @@ type User struct {
 	Permissions []int8             `json:"permissions" bson:"permissions,omitempty"`
 }
 
-func CreateSuperUser(idName, name, lname, email, pwd, bth string) error {
+func CreateSuperUser(nick, name, lname, email, pwd, bth string) error {
 	newUser := &User{
-		IdName:      idName,
+		Nick:        nick,
 		CreatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
 		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
 		Name:        name,
@@ -49,9 +49,9 @@ func ExistsSuperUser() bool {
 	return err == nil
 }
 
-func CreateUser(idName, name, lname, email, pwd, bth string) error {
+func CreateUser(nick, name, lname, email, pwd, bth string) error {
 	newUser := &User{
-		IdName:      idName,
+		Nick:        nick,
 		CreatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
 		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
 		Name:        name,
@@ -67,26 +67,26 @@ func CreateUser(idName, name, lname, email, pwd, bth string) error {
 	return err
 }
 
-func ExistsUser(idName, email string) bool {
+func ExistsUser(nick, email string) bool {
 	ctx, client, coll := config.ConnectColl("users")
 	defer client.Disconnect(ctx)
 	user := &User{}
 	err := coll.FindOne(ctx, bson.M{"$or": []bson.M{
-		{"id_name": idName},
+		{"nick": nick},
 		{"email": email},
 	}}).Decode(user)
 	return err == nil
 }
 
-func ExistsUserById(idStr string) bool {
+func ExistsUserById(id string) bool {
 	ctx, client, coll := config.ConnectColl("users")
 	defer client.Disconnect(ctx)
-	id, err := primitive.ObjectIDFromHex(idStr)
+	idObj, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return false
 	}
 	user := &User{}
-	err = coll.FindOne(ctx, bson.M{"_id": id}).Decode(user)
+	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(user)
 	return err == nil
 }
 
@@ -95,7 +95,7 @@ func GetUser(identifier string) (*User, error) {
 	defer client.Disconnect(ctx)
 	user := &User{}
 	err := coll.FindOne(ctx, bson.M{"$or": []bson.M{
-		{"id_name": identifier},
+		{"nick": identifier},
 		{"email": identifier},
 	}}).Decode(user)
 	return user, err

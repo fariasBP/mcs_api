@@ -26,7 +26,7 @@ func Login(c echo.Context) error {
 		return c.JSON(401, config.SetResError(401, "Contraseña incorrecta", ""))
 	}
 	// creando token
-	token, expiresJWT, err := middlewares.CreateToken(user.IdName)
+	token, expiresJWT, err := middlewares.CreateToken(user.ID.Hex())
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo crear el token", err.Error()))
 	}

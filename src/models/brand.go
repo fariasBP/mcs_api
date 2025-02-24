@@ -28,6 +28,18 @@ func CreateBrand(name string) error {
 	return err
 }
 
+func GetBrandById(id string) (*Brand, error) {
+	ctx, client, coll := config.ConnectColl("brand")
+	defer client.Disconnect(ctx)
+	idObj, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	brand := &Brand{}
+	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(brand)
+	return brand, err
+}
+
 func ExistsBrand(name string) bool {
 	ctx, client, coll := config.ConnectColl("brand")
 	defer client.Disconnect(ctx)
@@ -76,5 +88,6 @@ func GetBrands(name string, limit, page int) ([]Brand, int64, error) {
 	if err = cursor.All(ctx, &brands); err != nil {
 		return nil, 0, err
 	}
+
 	return brands, count, nil
 }
