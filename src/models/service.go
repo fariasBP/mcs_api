@@ -23,12 +23,21 @@ const (
 )
 
 const (
-	Recived    StatusService = 0 // Recibidoy pendiente
+	Recived    StatusService = 0 // Recibido y pendiente
 	Inspection StatusService = 1 // Inspeccion y diagnostico
 	Execute    StatusService = 2 // Ejecutado o ejecutando
 	Test       StatusService = 3 // Pruebas, Evaluacion y verificacion
 	Delivery   StatusService = 4 // Registro y Entrega
 	Cancelled  StatusService = 5 // Cancelado
+)
+
+type Status2Service int
+
+const (
+	Nono      Status2Service = 0 // cualquier status
+	Pending   Status2Service = 1 // pendiente (status: 0, 1)
+	Ejecution Status2Service = 2 // en ejecucion (status: 2, 3)
+	Finish    Status2Service = 3 // finalizado (status: 4, 5)
 )
 
 // type Record struct {
@@ -38,16 +47,24 @@ const (
 // 	Observation string         `json:"observation" bson:"observation,omitempty"`
 // }
 
-type Service struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	MachineId string             `json:"machine_id" bson:"machine_id,omitempty"`
-	StartedAt primitive.DateTime `json:"started_at" bson:"started_at,omitempty"`
-	EndedAt   primitive.DateTime `json:"ended_at" bson:"ended_at,omitempty"`
-	Keepers   []string           `json:"keepers" bson:"keepers,omitempty"`
-	Status    StatusService      `json:"status" bson:"status,omitempty"`
-	// Materials []string           `json:"materials" bson:"materials,omitempty"`
-	// Problems []string           `json:"problems" bson:"problems,omitempty"`
-}
+type (
+	Service struct {
+		ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+		MachineId string             `json:"machine_id" bson:"machine_id,omitempty"`
+		StartedAt primitive.DateTime `json:"started_at" bson:"started_at,omitempty"`
+		EndedAt   primitive.DateTime `json:"ended_at" bson:"ended_at,omitempty"`
+		Keepers   []string           `json:"keepers" bson:"keepers,omitempty"`
+		Status    StatusService      `json:"status" bson:"status,omitempty"`
+	}
+	ServiceRebuild struct {
+		ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+		StartedAt primitive.DateTime `json:"started_at" bson:"started_at,omitempty"`
+		EndedAt   primitive.DateTime `json:"ended_at" bson:"ended_at,omitempty"`
+		Keepers   []string           `json:"keepers" bson:"keepers,omitempty"`
+		Status    StatusService      `json:"status" bson:"status,omitempty"`
+		Machine   MachineRebuild     `json:"machine" bson:"machine,omitempty"`
+	}
+)
 
 func NewService(machineId, keeper string) error {
 	// creando estructura
@@ -218,25 +235,53 @@ func GetServiceById(id string) (*Service, error) {
 	return service, err
 }
 
-func GetServices(machine_id, endedAt string, limit, page int) ([]Service, int64, error) {
+func GetServices(startedAt, endedAt time.Time, ascending bool, status Status2Service, limit, page int) ([]Service, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("services")
 	defer client.Disconnect(ctx)
-
 	// creando parametros de consulta
-	opts := options.Find().SetSort(bson.M{"ended_at": -1}).SetLimit(int64(limit)).SetSkip(int64(page - 1))
-	query := bson.M{"machine_id": machine_id}
-	if endedAt != "" {
-		// trabajando en fechas
-		ended, err := time.Parse(time.DateTime, endedAt)
-		if err != nil {
-			return nil, 0, err
+	asc := -1
+	if ascending {
+		asc = 1
+	}
+	opts := options.Find().SetSort(bson.M{"started_at": asc}).SetLimit(int64(limit)).SetSkip(int64(page - 1))
+	// creando consulta
+	query := bson.M{}
+	if !startedAt.IsZero() && !endedAt.IsZero() {
+		query = bson.M{"started_at": bson.M{"$gte": primitive.NewDateTimeFromTime(startedAt.UTC()), "$lte": primitive.NewDateTimeFromTime(endedAt.UTC())}}
+		if status == 1 {
+			fmt.Println("quiiii")
+			query = bson.M{"$and": []bson.M{
+				{"started_at": bson.M{"$gte": primitive.NewDateTimeFromTime(startedAt.UTC()), "$lte": primitive.NewDateTimeFromTime(endedAt.UTC())}},
+				{"$or": []bson.M{
+					{"status": bson.M{"$eq": 0}},
+					{"status": bson.M{"$eq": 1}},
+					{"status": bson.M{"$exists": false}},
+				}},
+			}}
+		} else if status == 2 {
+			query = bson.M{"$and": []bson.M{
+				{"started_at": bson.M{"$gte": primitive.NewDateTimeFromTime(startedAt.UTC()), "$lte": primitive.NewDateTimeFromTime(endedAt.UTC())}},
+				{"status": bson.M{"$gte": 2, "$lte": 3}},
+			}}
+		} else if status == 3 {
+			query = bson.M{"$and": []bson.M{
+				{"started_at": bson.M{"$gte": primitive.NewDateTimeFromTime(startedAt.UTC()), "$lte": primitive.NewDateTimeFromTime(endedAt.UTC())}},
+				{"status": bson.M{"$gte": 4, "$lte": 5}},
+			}}
 		}
-		// creando query con ended
-		query = bson.M{"$and": []bson.M{
-			{"machine_id": machine_id},
-			{"ended_at": bson.M{"$lte": primitive.NewDateTimeFromTime(ended.UTC())}},
-		}}
+	} else {
+		if status == Pending {
+			query = bson.M{"$or": []bson.M{
+				{"status": bson.M{"$eq": 0}},
+				{"status": bson.M{"$eq": 1}},
+				{"status": bson.M{"$exists": false}},
+			}}
+		} else if status == Ejecution {
+			query = bson.M{"status": bson.M{"$gte": 2, "$lte": 3}}
+		} else if status == Finish {
+			query = bson.M{"status": bson.M{"$gte": 4, "$lte": 5}}
+		}
 	}
 	// consultando cantidad de datos
 	count, err := coll.CountDocuments(ctx, query)

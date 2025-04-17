@@ -26,7 +26,7 @@ func Login(c echo.Context) error {
 		return c.JSON(401, config.SetResError(401, "Contraseña incorrecta", ""))
 	}
 	// creando token
-	token, expiresJWT, err := middlewares.CreateToken(user.ID.Hex())
+	token, expiresJWT, err := middlewares.CreateToken(user.ID.Hex(), user.Perm)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo crear el token", err.Error()))
 	}
@@ -49,10 +49,23 @@ func SignUp(c echo.Context) error {
 		return c.JSON(500, config.SetResError(500, "No se pudo encriptar la contraseña", err.Error()))
 	}
 	// creando usuario
-	err = models.CreateUser(body.IdName, body.Name, body.Lname, body.Email, hashPwd, body.Bth)
+	err = models.CreateUser(body.IdName, body.Name, body.Lname, body.Email, hashPwd, body.Bth, models.Default)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "Internal Server Error", err.Error()))
 	}
 
 	return c.JSON(200, config.SetRes(200, "User created"))
+}
+
+func CheckToken(c echo.Context) error {
+	// obteniendo variables de request
+	id := c.Get("id").(string)
+
+	// buscando usuario
+	user, err := models.GetUserById(id)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo encontrar al usuario", err.Error()))
+	}
+
+	return c.JSON(200, config.SetResJson(200, "El token es valido", user))
 }

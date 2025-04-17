@@ -10,7 +10,7 @@ import (
 
 func Material(e *echo.Group) {
 	router := e.Group("/material", middlewares.ValidateToken)
-	router.POST("/create", controllers.CreateMaterial, validations.CreateMaterialValidate)
+	router.POST("/new", controllers.NewMaterial, validations.CreateMaterialValidate)
+	router.GET("/search", controllers.GetMaterials, validations.GetMaterialsValidate)
 	router.PUT("/update", controllers.UpdateMaterial, validations.UpdateMaterialValidate)
-	router.GET("/materials", controllers.GetMaterials, validations.GetMaterialsValidate)
 }

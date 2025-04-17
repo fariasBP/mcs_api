@@ -11,7 +11,8 @@ import (
 )
 
 type JwtCustomClaims struct {
-	Id string `json:"id"`
+	Id   string            `json:"id"`
+	Perm models.Permission `json:"perm"`
 	jwt.StandardClaims
 }
 

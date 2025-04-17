@@ -11,7 +11,7 @@ import (
 func Service(e *echo.Group) {
 	router := e.Group("/service", middlewares.ValidateToken)
 	router.POST("/new", controllers.NewService, validations.NewServiceValidate)
-	router.GET("/services", controllers.GetServices)
+	router.GET("/services", controllers.GetServices, validations.GetServicesValidate)
 	router.PUT("/sleep", controllers.SleepService, validations.SleepServiceValidate)
 	router.PUT("/finish", controllers.FinishService, validations.FinishServiceValidate)
 	router.PUT("/progress", controllers.ProgressService, validations.ProgressServiceValidate)

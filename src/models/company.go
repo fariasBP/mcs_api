@@ -15,12 +15,13 @@ type Company struct {
 	UpdatedAt   primitive.DateTime `json:"updated_at" bson:"updated_at"`
 	Name        string             `json:"name" bson:"name,omitempty"`
 	Manager     string             `json:"manager" bson:"manager,omitempty"`
-	Location    string             `json:"location" bson:"location,omitempty"`
+	Latitude    string             `json:"latitude" bson:"latitude,omitempty"`
+	Longitude   string             `json:"longitude" bson:"longitude,omitempty"`
 	Description string             `json:"description" bson:"description,omitempty"`
 	Contact     string             `json:"contact" bson:"contact,omitempty"`
 }
 
-func CreateCompany(name, manager, location, description, contact string) error {
+func CreateCompany(name, manager, latitude, longitude, description, contact string) error {
 	ctx, client, coll := config.ConnectColl("companies")
 	defer client.Disconnect(ctx)
 	newCompany := &Company{
@@ -28,9 +29,10 @@ func CreateCompany(name, manager, location, description, contact string) error {
 		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
 		Name:        name,
 		Manager:     manager,
-		Location:    location,
+		Latitude:    latitude,
+		Longitude:   longitude,
 		Description: description,
-		Contact: contact,
+		Contact:     contact,
 	}
 	_, err := coll.InsertOne(ctx, newCompany)
 	return err
@@ -56,16 +58,16 @@ func ExistsCompanyById(idStr string) bool {
 	return err == nil
 }
 
-func GetCompanies(name string, limit, page int) ([]Company, int64, error) {
+func GetCompanies(search string, limit, page int) ([]Company, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("companies")
 	defer client.Disconnect(ctx)
 	// creando parametros de consulta
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
 	query := bson.M{}
-	if name != "" {
+	if search != "" {
 		query = bson.M{"name": primitive.Regex{
-			Pattern: `(\s` + name + `|^` + name + `|\w` + name + `\w` + `|` + name + `$` + `|` + name + `\s)`, Options: "i",
+			Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
 		}}
 	}
 	// consultando cantidad de datos

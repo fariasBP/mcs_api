@@ -10,27 +10,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateBrand(c echo.Context) error {
-	body := &validations.CreateBrandParams{}
+func NewBrand(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.NewBrandParams{}
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
-	// verificando que no exista la marca
-	if models.ExistsBrand(body.Name) {
-		return c.JSON(400, config.SetResError(400, "La marca ya existe", ""))
-	}
 	// creando marca
 	err := models.CreateBrand(body.Name)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "no se creo la marca", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo crear la marca (fabricante)", err.Error()))
 	}
 
-	return c.JSON(200, config.SetRes(200, "La marca se ha creado"))
+	return c.JSON(200, config.SetRes(200, "La marca (fabricante): "+body.Name+" se ha creado"))
 }
 
 func GetBrands(c echo.Context) error {
 	// obteniendo params
-	name := c.QueryParam("name")
+	query := c.QueryParam("query")
 	limit := c.QueryParam("limit")
 	page := c.QueryParam("page")
 	// convirtiendo params
@@ -43,10 +40,10 @@ func GetBrands(c echo.Context) error {
 		pageInt = 1
 	}
 	// consultando
-	brands, count, err := models.GetBrands(name, limitInt, pageInt)
+	brands, count, err := models.GetBrands(query, limitInt, pageInt)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "No se pudo obtener las marcas", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener las marcas (fabricantes)", err.Error()))
 	}
 
-	return c.JSON(200, config.SetResJsonCount(200, "Las marcas se han obtenido", count, brands))
+	return c.JSON(200, config.SetResJsonCount(200, "Las marcas (fabricantes) se han obtenido", count, brands))
 }

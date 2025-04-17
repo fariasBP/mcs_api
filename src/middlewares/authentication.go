@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"mcs_api/src/config"
+	"mcs_api/src/models"
 	"os"
 	"strconv"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateToken(id string) (string, time.Time, error) {
+func CreateToken(id string, perm models.Permission) (string, time.Time, error) {
 	// obteniendo variables de entorno
 	secretVal, _ := os.LookupEnv("SECRET")
 	durationVal, _ := os.LookupEnv("DURATION_JWT")
@@ -24,6 +25,7 @@ func CreateToken(id string) (string, time.Time, error) {
 	// creando claims
 	claims := &JwtCustomClaims{
 		id,
+		perm,
 		jwt.StandardClaims{
 			ExpiresAt: expiresJWT.Unix(),
 		},
@@ -55,7 +57,20 @@ func ValidateToken(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		// creando variables de sesion
 		c.Set("id", claims.Id)
+		c.Set("perm", claims.Perm)
 		// retornando token
+		return next(c)
+	}
+}
+
+func IsSuper(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// obteniendo el header Access-Token
+		tkn := c.Request().Header.Get("Access-Token")
+		if tkn == "" {
+			return c.JSON(401, config.SetRes(401, "No se ha proporcionado el token de acceso"))
+		}
+		// obteniendo variables de entorno secret
 		return next(c)
 	}
 }

@@ -10,27 +10,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateProtocol(c echo.Context) error {
-	body := &validations.CreateProtocolParams{}
+func NewProtocol(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.NewProtocolParams{}
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
-	// verificando que no exista la marca
-	if models.ExistsProtocol(body.Name, body.Acronym) {
-		return c.JSON(400, config.SetResError(400, "El protocolo ya existe", ""))
-	}
 	// creando marca
-	err := models.CreateProtocol(body.Acronym, body.Name, body.Description)
+	err := models.CreateProtocol(body.MachineTypeId, body.Acronym, body.Name, body.Description)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "no se creo el protocolo", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo crear el protocolo", err.Error()))
 	}
 
-	return c.JSON(200, config.SetRes(200, "El protocolo se ha creado"))
+	return c.JSON(200, config.SetRes(200, "El protocolo: '"+body.Name+"' se ha creado"))
 }
 
 func GetProtocols(c echo.Context) error {
 	// obteniendo params
-	name := c.QueryParam("name")
+	query := c.QueryParam("query")
 	limit := c.QueryParam("limit")
 	page := c.QueryParam("page")
 	// convirtiendo params
@@ -43,10 +40,30 @@ func GetProtocols(c echo.Context) error {
 		pageInt = 1
 	}
 	// consultando
-	protocols, count, err := models.GetProtocols(name, limitInt, pageInt)
+	protocols, count, err := models.GetProtocols(query, limitInt, pageInt)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "No se pudo obtener los protocolos", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener los protocolos", err.Error()))
+	}
+	// recostruyendo
+	protocolsRebuild := make([]models.ProtocolRebuild, len(protocols))
+	for i, v := range protocols {
+		machineType, err := models.GetMachineTypeById(v.MachineTypeId)
+		if err != nil {
+			return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener el id del tipo de maquina, del protocolo: '"+v.Name+"'", err.Error()))
+		}
+		machineTypeName := machineType.Name
+
+		protocolsRebuild[i] = models.ProtocolRebuild{
+			ID:              v.ID,
+			CreatedAt:       v.CreatedAt,
+			UpdatedAt:       v.UpdatedAt,
+			MachineTypeId:   v.MachineTypeId,
+			MachineTypeName: machineTypeName,
+			Acronym:         v.Acronym,
+			Name:            v.Name,
+			Description:     v.Description,
+		}
 	}
 
-	return c.JSON(200, config.SetResJsonCount(200, "Los protocolos se han obtenido", count, protocols))
+	return c.JSON(200, config.SetResJsonCount(200, "Los protocolos se han obtenido", count, protocolsRebuild))
 }

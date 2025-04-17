@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	CreateMaterialParams struct {
+	NewMaterialParams struct {
 		ServiceId string `json:"service_id" validate:"required,mongodb"`
 		Name      string `json:"name" validate:"required,startsnotwith= ,endsnotwith= ,min=3,max=30"`
 		Number    int    `json:"number" validate:"required,number,gt=0"`
@@ -32,12 +32,12 @@ type (
 func CreateMaterialValidate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// obteniendo body json
-		body := &CreateMaterialParams{}
+		body := &NewMaterialParams{}
 		data, _ := io.ReadAll(c.Request().Body)
 		reader := bytes.NewReader(data)
 		_ = json.NewDecoder(reader).Decode(body)
 		// estableciendo los argumentos de validacion
-		v := &CreateMaterialParams{ServiceId: body.ServiceId, Name: body.Name, Number: body.Number, Price: body.Price}
+		v := &NewMaterialParams{ServiceId: body.ServiceId, Name: body.Name, Number: body.Number, Price: body.Price}
 		// realizando valdacion
 		validate := validator.New()
 		if err := validate.Struct(v); err != nil {

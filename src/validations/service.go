@@ -50,6 +50,14 @@ type (
 		ServiceId string `json:"service_id" validate:"required,mongodb"`
 		Progress  int    `json:"progress" validate:"required,number,gt=0,lt=4"`
 	}
+	GetServicesParamsQuery struct {
+		StartedAt string `json:"started_at"`
+		EndedAt   string `json:"ended_at"`
+		Status    string `json:"status" validate:"required,gte=0,lte=3"`
+		Ascending string `json:"ascending" validate:"required,boolean"`
+		Limit     string `json:"limit" validate:"required,number,gt=0"`
+		Page      string `json:"page" validate:"required,number,gt=0"`
+	}
 )
 
 func NewServiceValidate(next echo.HandlerFunc) echo.HandlerFunc {
@@ -198,6 +206,36 @@ func ProgressServiceValidate(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		// fin del middleware
 		c.Request().Body = io.NopCloser(bytes.NewReader([]byte(data)))
+		return next(c)
+	}
+}
+
+func GetServicesValidate(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// obteniendo query
+		startedAt := c.QueryParam("started_at")
+		endedAt := c.QueryParam("ended_at")
+		status := c.QueryParam("status")
+		ascending := c.QueryParam("ascending")
+		limit := c.QueryParam("limit")
+		page := c.QueryParam("page")
+
+		// estableciendo los argumentos de validacion
+		v := &GetServicesParamsQuery{
+			StartedAt: startedAt,
+			EndedAt:   endedAt,
+			Status:    status,
+			Ascending: ascending,
+			Limit:     limit,
+			Page:      page,
+		}
+		// realizando valdacion
+		validate := validator.New()
+		if err := validate.Struct(v); err != nil {
+			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos.", err.Error()))
+		}
+
+		// fin del middleware
 		return next(c)
 	}
 }

@@ -60,16 +60,16 @@ func ExistsBrandById(idStr string) bool {
 	return err == nil
 }
 
-func GetBrands(name string, limit, page int) ([]Brand, int64, error) {
+func GetBrands(search string, limit, page int) ([]Brand, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("brand")
 	defer client.Disconnect(ctx)
 	// creando parametros de consulta
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
 	query := bson.M{}
-	if name != "" {
+	if search != "" {
 		query = bson.M{"name": primitive.Regex{
-			Pattern: `(\s` + name + `|^` + name + `|\w` + name + `\w` + `|` + name + `$` + `|` + name + `\s)`, Options: "i",
+			Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
 		}}
 	}
 	// consultando cantidad de datos

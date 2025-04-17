@@ -9,9 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateMaterial(c echo.Context) error {
+func NewMaterial(c echo.Context) error {
 	// obteniendo variables de request
-	body := &validations.CreateMaterialParams{}
+	body := &validations.NewMaterialParams{}
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
@@ -21,7 +21,7 @@ func CreateMaterial(c echo.Context) error {
 		return c.JSON(500, config.SetResError(500, "No se creo el material", err.Error()))
 	}
 
-	return c.JSON(200, config.SetRes(200, "El material se ha creado"))
+	return c.JSON(200, config.SetRes(200, "El material: "+body.Name+" se ha creado"))
 }
 
 func UpdateMaterial(c echo.Context) error {

@@ -9,22 +9,36 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type Protocol struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	CreatedAt   primitive.DateTime `json:"created_at" bson:"created_at"`
-	UpdatedAt   primitive.DateTime `json:"updated_at" bson:"updated_at"`
-	Acronym     string             `json:"acronym" bson:"acronym,omitempty"`
-	Name        string             `json:"name" bson:"name,omitempty"`
-	Description string             `json:"description" bson:"description,omitempty"`
-}
+type (
+	Protocol struct {
+		ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+		CreatedAt     primitive.DateTime `json:"created_at" bson:"created_at"`
+		UpdatedAt     primitive.DateTime `json:"updated_at" bson:"updated_at"`
+		MachineTypeId string             `json:"machine_type_id" bson:"machine_type_id,omitempty"`
+		Acronym       string             `json:"acronym" bson:"acronym,omitempty"`
+		Name          string             `json:"name" bson:"name,omitempty"`
+		Description   string             `json:"description" bson:"description,omitempty"`
+	}
+	ProtocolRebuild struct {
+		ID              primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+		CreatedAt       primitive.DateTime `json:"created_at" bson:"created_at"`
+		UpdatedAt       primitive.DateTime `json:"updated_at" bson:"updated_at"`
+		MachineTypeId   string             `json:"machine_type_id" bson:"machine_type_id,omitempty"`
+		MachineTypeName string             `json:"machine_type_name" bson:"machine_type_name,omitempty"`
+		Acronym         string             `json:"acronym" bson:"acronym,omitempty"`
+		Name            string             `json:"name" bson:"name,omitempty"`
+		Description     string             `json:"description" bson:"description,omitempty"`
+	}
+)
 
-func CreateProtocol(acronym, name, description string) error {
+func CreateProtocol(machineTypeId, acronym, name, description string) error {
 	newProtocol := &Protocol{
-		CreatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
-		UpdatedAt:   primitive.NewDateTimeFromTime(time.Now().UTC()),
-		Acronym:     acronym,
-		Name:        name,
-		Description: description,
+		CreatedAt:     primitive.NewDateTimeFromTime(time.Now().UTC()),
+		UpdatedAt:     primitive.NewDateTimeFromTime(time.Now().UTC()),
+		MachineTypeId: machineTypeId,
+		Acronym:       acronym,
+		Name:          name,
+		Description:   description,
 	}
 	ctx, client, coll := config.ConnectColl("protocol")
 	defer client.Disconnect(ctx)
@@ -32,14 +46,19 @@ func CreateProtocol(acronym, name, description string) error {
 	return err
 }
 
-func ExistsProtocol(name, acronym string) bool {
+func ExistsProtocol(machineTypeId, name, acronym string) bool {
 	ctx, client, coll := config.ConnectColl("protocol")
 	defer client.Disconnect(ctx)
 	protocol := &Protocol{}
-	err := coll.FindOne(ctx, bson.M{"$or": []bson.M{
-		{"name": name},
-		{"acronym": acronym},
-	}}).Decode(protocol)
+	query := bson.M{"$and": []bson.M{
+		{"machine_type_id": machineTypeId},
+		{"$or": []bson.M{
+			{"name": name},
+			{"acronym": acronym},
+		}},
+	}}
+	err := coll.FindOne(ctx, query).Decode(protocol)
+
 	return err == nil
 }
 
@@ -55,16 +74,16 @@ func ExistsProtocolById(idStr string) bool {
 	return err == nil
 }
 
-func GetProtocols(name string, limit, page int) ([]Protocol, int64, error) {
+func GetProtocols(search string, limit, page int) ([]Protocol, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("protocol")
 	defer client.Disconnect(ctx)
 	// creando parametros de consulta
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
 	query := bson.M{}
-	if name != "" { // AQUE MEJORAR PARA QUE BUSQUE EN DESCRIPCION MAS
+	if search != "" { // AQUE MEJORAR PARA QUE BUSQUE EN DESCRIPCION MAS
 		query = bson.M{"name": primitive.Regex{
-			Pattern: `(\s` + name + `|^` + name + `|\w` + name + `\w` + `|` + name + `$` + `|` + name + `\s)`, Options: "i",
+			Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
 		}}
 	}
 	// consultando cantidad de datos

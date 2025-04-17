@@ -62,16 +62,16 @@ func ExistsMachineTypeById(idStr string) bool {
 	return err == nil
 }
 
-func GetMachineTypes(name string, limit, page int) ([]MachineType, int64, error) {
+func GetMachineTypes(search string, limit, page int) ([]MachineType, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("machinetype")
 	defer client.Disconnect(ctx)
 	// creando parametros de consulta
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
 	query := bson.M{}
-	if name != "" {
+	if search != "" {
 		query = bson.M{"name": primitive.Regex{
-			Pattern: `(\s` + name + `|^` + name + `|\w` + name + `\w` + `|` + name + `$` + `|` + name + `\s)`, Options: "i",
+			Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
 		}}
 	}
 	// consultando cantidad de datos
