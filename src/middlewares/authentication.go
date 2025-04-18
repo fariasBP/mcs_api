@@ -18,7 +18,7 @@ func CreateToken(id string, perm models.Permission) (string, time.Time, error) {
 	// convirtiendo a entero la duracion
 	duration, err := strconv.Atoi(durationVal)
 	if err != nil {
-		duration = 1 // 1 dia(s)
+		duration = 7 // 1 dia(s)
 	}
 	// creando la fecha de expiracion (en dias)
 	expiresJWT := time.Now().Add(time.Duration(duration) * 24 * time.Hour)
@@ -65,12 +65,39 @@ func ValidateToken(next echo.HandlerFunc) echo.HandlerFunc {
 
 func IsSuper(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// obteniendo el header Access-Token
-		tkn := c.Request().Header.Get("Access-Token")
-		if tkn == "" {
-			return c.JSON(401, config.SetRes(401, "No se ha proporcionado el token de acceso"))
+		// obteniendo perm
+		perm := c.Get("perm").(models.Permission)
+		// verificando permiso
+		if perm != models.Super {
+			return c.JSON(401, config.SetResError(401, "Error:No tienes permiso para realizar esta acción", ""))
 		}
 		// obteniendo variables de entorno secret
 		return next(c)
+	}
+}
+
+func IsGTEtoAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// obteniendo perm
+		perm := c.Get("perm").(models.Permission)
+		// verificando permiso
+		if perm >= models.Admin && perm <= models.Super {
+			return next(c)
+		}
+
+		return c.JSON(401, config.SetResError(401, "Error: No tienes permiso para realizar esta acción", ""))
+	}
+}
+
+func IsGTEtoOperator(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// obteniendo perm
+		perm := c.Get("perm").(models.Permission)
+		// verificando permiso
+		if perm >= models.Operator && perm <= models.Super {
+			return next(c)
+		}
+
+		return c.JSON(401, config.SetResError(401, "Error: No tienes permiso para realizar esta acción", ""))
 	}
 }

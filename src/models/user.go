@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type Permission int
 
 const (
-	Super    Permission = 4 // crea lee modifica y elimina
-	Admin    Permission = 3 // crea lee y modifica
-	Operator Permission = 2 // crea y lee
-	Public   Permission = 1 // solo lee
-	Default  Permission = 0 // no tiene permiso
+	Super    Permission = 3 // crea lee modifica y elimina
+	Admin    Permission = 2 // crea lee y modifica
+	Operator Permission = 1 // crea y lee
+	Public   Permission = 0 // solo lee
 )
 
 type User struct {
@@ -53,9 +53,7 @@ func ExistsSuperUser() bool {
 	user := &User{}
 	ctx, client, coll := config.ConnectColl("users")
 	defer client.Disconnect(ctx)
-	err := coll.FindOne(ctx, bson.M{"permissions": bson.M{
-		"$all": []int8{0},
-	}}).Decode(user)
+	err := coll.FindOne(ctx, bson.M{"perm": Super}).Decode(user)
 	return err == nil
 }
 
@@ -100,7 +98,7 @@ func ExistsUserById(id string) bool {
 	return err == nil
 }
 
-func GetUser(identifier string) (*User, error) {
+func GetUserAndPwd(identifier string) (*User, error) {
 	ctx, client, coll := config.ConnectColl("users")
 	defer client.Disconnect(ctx)
 	user := &User{}
@@ -122,7 +120,24 @@ func GetUserById(id string) (*User, error) {
 	}
 	// buscando usuario
 	user := &User{}
-	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(user)
+	opts := options.FindOne().SetProjection(bson.M{"pwd": 0})
+	err = coll.FindOne(ctx, bson.M{"_id": idObj}, opts).Decode(user)
 
 	return user, err
+}
+
+func UpdateUser(user *User) error {
+	ctx, client, coll := config.ConnectColl("users")
+	defer client.Disconnect(ctx)
+	idObj, err := primitive.ObjectIDFromHex(user.ID.Hex())
+	if err != nil {
+		return err
+	}
+	user.ID = idObj
+	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err = coll.UpdateOne(ctx, bson.M{"_id": idObj}, bson.M{"$set": user})
+	if user.Perm == Public {
+		_, err = coll.UpdateOne(ctx, bson.M{"_id": idObj}, bson.M{"$set": bson.M{"perm": Public}})
+	}
+	return err
 }

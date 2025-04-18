@@ -12,7 +12,7 @@ func GetUser(c echo.Context) error {
 	id := c.Get("id").(string)
 
 	// buscando usuario
-	user, err := models.GetUser(id)
+	user, err := models.GetUserAndPwd(id)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo encontrar al usuario", err.Error()))
 	}
