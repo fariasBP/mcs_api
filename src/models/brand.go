@@ -91,3 +91,14 @@ func GetBrands(search string, limit, page int) ([]Brand, int64, error) {
 
 	return brands, count, nil
 }
+
+func UpdateBrand(brand *Brand) error {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("brand")
+	defer client.Disconnect(ctx)
+	// actualizando marca
+	brand.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err := coll.UpdateOne(ctx, bson.M{"_id": brand.ID}, bson.M{"$set": brand})
+
+	return err
+}

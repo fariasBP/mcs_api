@@ -43,20 +43,25 @@ func GetMachineTypeById(id string) (*MachineType, error) {
 }
 
 func ExistsMachineType(name string) bool {
+	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("machinetype")
 	defer client.Disconnect(ctx)
+	// consultando
 	machineType := &MachineType{}
 	err := coll.FindOne(ctx, bson.M{"name": name}).Decode(machineType)
 	return err == nil
 }
 
 func ExistsMachineTypeById(idStr string) bool {
+	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("machinetype")
 	defer client.Disconnect(ctx)
+	// obteniendo id
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		return false
 	}
+	// consultando
 	machineType := &MachineType{}
 	err = coll.FindOne(ctx, bson.M{"_id": id}).Decode(machineType)
 	return err == nil
@@ -91,4 +96,14 @@ func GetMachineTypes(search string, limit, page int) ([]MachineType, int64, erro
 		return nil, 0, err
 	}
 	return machinetypes, count, nil
+}
+
+func UpdateMachineType(machineType *MachineType) error {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("machinetype")
+	defer client.Disconnect(ctx)
+	// actualizando
+	machineType.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err := coll.UpdateOne(ctx, bson.M{"_id": machineType.ID}, bson.M{"$set": machineType})
+	return err
 }

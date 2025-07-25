@@ -46,7 +46,19 @@ func CreateProtocol(machineTypeId, acronym, name, description string) error {
 	return err
 }
 
-func ExistsProtocol(machineTypeId, name, acronym string) bool {
+func GetProtocolById(idStr string) (*Protocol, error) {
+	ctx, client, coll := config.ConnectColl("protocol")
+	defer client.Disconnect(ctx)
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		return nil, err
+	}
+	protocol := &Protocol{}
+	err = coll.FindOne(ctx, bson.M{"_id": id}).Decode(protocol)
+	return protocol, err
+}
+
+func ExistsProtocol(machineTypeId, acronym, name string) bool {
 	ctx, client, coll := config.ConnectColl("protocol")
 	defer client.Disconnect(ctx)
 	protocol := &Protocol{}
@@ -74,6 +86,30 @@ func ExistsProtocolById(idStr string) bool {
 	return err == nil
 }
 
+// existe otro sin contar este
+func ExistsOtherProtocol(protocolId, machineTypeId, acronym, name string) bool { //
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("protocol")
+	defer client.Disconnect(ctx)
+	// obteniendo id
+	id, err := primitive.ObjectIDFromHex(protocolId)
+	if err != nil {
+		return false
+	}
+	// consultando
+	protocol := &Protocol{}
+	query := bson.M{"$and": []bson.M{
+		{"_id": bson.M{"$ne": id}},
+		{"machine_type_id": machineTypeId},
+		{"$or": []bson.M{
+			{"name": name},
+			{"acronym": acronym},
+		}},
+	}}
+	err = coll.FindOne(ctx, query).Decode(protocol)
+	return err == nil
+}
+
 func GetProtocols(search string, limit, page int) ([]Protocol, int64, error) {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("protocol")
@@ -81,9 +117,14 @@ func GetProtocols(search string, limit, page int) ([]Protocol, int64, error) {
 	// creando parametros de consulta
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(page - 1))
 	query := bson.M{}
-	if search != "" { // AQUE MEJORAR PARA QUE BUSQUE EN DESCRIPCION MAS
-		query = bson.M{"name": primitive.Regex{
-			Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
+	if search != "" {
+		query = bson.M{"$or": []bson.M{
+			{"acronym": primitive.Regex{
+				Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
+			}},
+			{"name": primitive.Regex{
+				Pattern: `(\s` + search + `|^` + search + `|\w` + search + `\w` + `|` + search + `$` + `|` + search + `\s)`, Options: "i",
+			}},
 		}}
 	}
 	// consultando cantidad de datos
@@ -103,4 +144,14 @@ func GetProtocols(search string, limit, page int) ([]Protocol, int64, error) {
 		return nil, 0, err
 	}
 	return protocols, count, nil
+}
+
+func UpdateProtocol(protocol *Protocol) error {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("protocol")
+	defer client.Disconnect(ctx)
+	// actualizando protocolo
+	protocol.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err := coll.UpdateOne(ctx, bson.M{"_id": protocol.ID}, bson.M{"$set": protocol})
+	return err
 }

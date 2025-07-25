@@ -13,22 +13,6 @@ import (
 )
 
 type (
-	ProblemParams struct {
-		Problem  string `json:"problem" validate:"required"`
-		Solution string `json:"solution" validate:"required"`
-	}
-	MaterialParams struct {
-		Name   string `json:"name" validate:"required"`
-		Number int    `json:"number" validate:"required"`
-		Price  int    `json:"price" validate:"required"`
-	}
-	ProtocolParams struct {
-		ProtocolId string          `json:"protocol_id" validate:"required"`
-		Status     int             `json:"status" validate:"required"`
-		Note       string          `json:"note" validate:"required"`
-		Problems   []ProblemParams `json:"problems" validate:"required"`
-	}
-
 	NewServiceParams struct {
 		MachineId string `json:"machine_id" validate:"required,mongodb"`
 	}
@@ -72,14 +56,14 @@ func NewServiceValidate(next echo.HandlerFunc) echo.HandlerFunc {
 		// realizando valdacion
 		validate := validator.New()
 		if err := validate.Struct(v); err != nil {
-			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos.", err.Error()))
+			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos", err.Error()))
 		}
 		// verificando que el id exista
 		if !models.ExistsMachineById(v.MachineId) {
 			return c.JSON(400, config.SetResError(400, "Error: el id de la maquina no existe", ""))
 		}
 		// verificando que la maquina no tenga un servicio activo
-		if models.ExistsServiceActiveFromMachineById(v.MachineId) {
+		if models.IsActiveService(v.MachineId) {
 			return c.JSON(400, config.SetResError(400, "Error: la maquina ya tiene un servicio activo", ""))
 		}
 		// fin del middleware

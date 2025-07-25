@@ -100,3 +100,13 @@ func GetCompanyById(id string) (*Company, error) {
 	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(company)
 	return company, err
 }
+
+func UpdateCompany(company *Company) error {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("companies")
+	defer client.Disconnect(ctx)
+	// actualizando marca
+	company.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err := coll.UpdateOne(ctx, bson.M{"_id": company.ID}, bson.M{"$set": company})
+	return err
+}

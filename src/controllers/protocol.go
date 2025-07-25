@@ -67,3 +67,27 @@ func GetProtocols(c echo.Context) error {
 
 	return c.JSON(200, config.SetResJsonCount(200, "Los protocolos se han obtenido", count, protocolsRebuild))
 }
+
+func UpdateProtocol(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.UpdateProtocolParams{}
+	d := c.Request().Body
+	_ = json.NewDecoder(d).Decode(body)
+	defer d.Close()
+	// obteniendo protocolo
+	protocol, err := models.GetProtocolById(body.ProtocolId)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener el protocolo: '"+body.Name+"'", err.Error()))
+	}
+	// actualizando parametros
+	protocol.Acronym = body.Acronym
+	protocol.Name = body.Name
+	protocol.Description = body.Description
+	// actualizando protocolo
+	err = models.UpdateProtocol(protocol)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo actualizar el protocolo", err.Error()))
+	}
+
+	return c.JSON(200, config.SetRes(200, "El protocolo: '"+body.Name+"' se ha actualizado"))
+}

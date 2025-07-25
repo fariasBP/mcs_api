@@ -10,6 +10,7 @@ import (
 
 func Protocol(e *echo.Group) {
 	router := e.Group("/protocol", middlewares.ValidateToken)
-	router.POST("/new", controllers.NewProtocol, validations.NewProtocolValidate)
-	router.GET("/search", controllers.GetProtocols, validations.GetProtocolsValidate)
+	router.POST("/new", controllers.NewProtocol, validations.NewProtocolValidate, middlewares.IsGTEtoAdmin)
+	router.GET("/search", controllers.GetProtocols, validations.GetProtocolsValidate, middlewares.IsGTEtoOperator)
+	router.PUT("/update", controllers.UpdateProtocol, validations.UpdateProtocolValidate, middlewares.IsGTEtoAdmin)
 }

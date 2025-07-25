@@ -47,3 +47,25 @@ func GetBrands(c echo.Context) error {
 
 	return c.JSON(200, config.SetResJsonCount(200, "Las marcas (fabricantes) se han obtenido", count, brands))
 }
+
+func UpdateBrand(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.UpdateBrandParams{}
+	d := c.Request().Body
+	_ = json.NewDecoder(d).Decode(body)
+	defer d.Close()
+	// obteniendo marca
+	brand, err := models.GetBrandById(body.BrandId)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener la marca (fabricante): '"+body.Name+"'", err.Error()))
+	}
+	// actualizando marca
+	brand.Name = body.Name
+	// consultando
+	err = models.UpdateBrand(brand)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo actualizar la marca (fabricante)", err.Error()))
+	}
+
+	return c.JSON(200, config.SetRes(200, "La marca (fabricante): '"+body.Name+"' se ha actualizado"))
+}

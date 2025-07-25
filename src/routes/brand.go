@@ -10,6 +10,7 @@ import (
 
 func Brand(e *echo.Group) {
 	router := e.Group("/brand", middlewares.ValidateToken)
-	router.POST("/new", controllers.NewBrand, validations.NewBrandValidate)
-	router.GET("/search", controllers.GetBrands, validations.GetBrandsValidate)
+	router.POST("/new", controllers.NewBrand, validations.NewBrandValidate, middlewares.IsGTEtoAdmin)
+	router.GET("/search", controllers.GetBrands, validations.GetBrandsValidate, middlewares.IsGTEtoOperator)
+	router.PUT("/update", controllers.UpdateBrand, validations.UpdateBrandValidate, middlewares.IsGTEtoAdmin)
 }

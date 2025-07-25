@@ -10,6 +10,7 @@ import (
 
 func Companies(e *echo.Group) {
 	router := e.Group("/company", middlewares.ValidateToken)
-	router.POST("/new", controllers.NewCompany, validations.NewCompanyValidate, middlewares.IsSuper)
-	router.GET("/search", controllers.GetCompanies, validations.GetCompaniesValidate)
+	router.POST("/new", controllers.NewCompany, validations.NewCompanyValidate, middlewares.IsGTEtoAdmin)
+	router.GET("/search", controllers.GetCompanies, validations.GetCompaniesValidate, middlewares.IsGTEtoOperator)
+	router.PUT("/update", controllers.UpdateCompany, validations.UpdateCompanyValidate, middlewares.IsGTEtoAdmin)
 }

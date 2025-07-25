@@ -49,3 +49,30 @@ func GetCompanies(c echo.Context) error {
 
 	return c.JSON(200, config.SetResJsonCount(200, "Las companias se han obtenido", count, companies))
 }
+
+func UpdateCompany(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.UpdateCompanyParams{}
+	d := c.Request().Body
+	_ = json.NewDecoder(d).Decode(body)
+	defer d.Close()
+	// obteniendo compania
+	company, err := models.GetCompanyById(body.CompanyId)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener la compania: '"+body.Name+"'", err.Error()))
+	}
+	// actualizando parametros
+	company.Name = body.Name
+	company.Manager = body.Manager
+	company.Latitude = body.Latitude
+	company.Longitude = body.Longitude
+	company.Description = body.Description
+	company.Contact = body.Contact
+	// actualizando compania
+	err = models.UpdateCompany(company)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo actualizar la compania", err.Error()))
+	}
+
+	return c.JSON(200, config.SetRes(200, "La compania: '"+body.Name+"' se ha actualizado"))
+}

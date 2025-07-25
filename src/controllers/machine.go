@@ -10,32 +10,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateMachine(c echo.Context) error {
+func NewMachine(c echo.Context) error {
 	// obteniendo variables de request
 	body := &validations.CreateMachineParams{}
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
-	// verificamos que existe el idOwner (id de la empresa)
-	if !models.ExistsCompanyById(body.CompanyId) {
-		return c.JSON(400, config.SetResError(400, "el id de la empresa no existe", ""))
-	}
-	// verificando que exista el tipo de maquina
-	if !models.ExistsMachineTypeById(body.MachineTypeId) {
-		return c.JSON(400, config.SetResError(400, "el tipo de maquina no existe", ""))
-	}
 	// creando maquina
 	err := models.CreateMachine(body.CompanyId, body.MachineTypeId, body.BrandId, body.Serial, body.Model)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "Internal Server Error", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo crear la maquina", err.Error()))
 	}
 
-	return c.JSON(200, config.SetRes(200, "maquina creada"))
+	return c.JSON(200, config.SetRes(200, "La maquina serial#"+body.Serial+" se ha creada"))
 }
 
 func GetMachines(c echo.Context) error {
 	// obteniendo params
-	serial := c.QueryParam("search")
+	query := c.QueryParam("query")
 	limit := c.QueryParam("limit")
 	page := c.QueryParam("page")
 	// convirtiendo params
@@ -48,7 +40,17 @@ func GetMachines(c echo.Context) error {
 		pageInt = 1
 	}
 	// consultando
-	machines, count, err := models.GetMachinesBySerial(serial, limitInt, pageInt)
+	var machines []models.Machine = nil
+	count := int64(0)
+	if models.ExistsCompanyById(query) {
+		machines, count, err = models.GetMachinesByCompanyOrBrandOrMachineTypeId(query, models.CompanyParam, limitInt, pageInt)
+	} else if models.ExistsMachineTypeById(query) {
+		machines, count, err = models.GetMachinesByCompanyOrBrandOrMachineTypeId(query, models.MachineTypeParam, limitInt, pageInt)
+	} else if models.ExistsBrandById(query) {
+		machines, count, err = models.GetMachinesByCompanyOrBrandOrMachineTypeId(query, models.BrandParam, limitInt, pageInt)
+	} else {
+		machines, count, err = models.GetMachinesByModelAndSerial(query, limitInt, pageInt)
+	}
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo obtener las maquinas", err.Error()))
 	}
@@ -87,4 +89,30 @@ func GetMachines(c echo.Context) error {
 	}
 
 	return c.JSON(200, config.SetResJsonCount(200, "Las maquinas se han obtenido", count, machinesRebuildBasic))
+}
+
+func UpdateMachine(c echo.Context) error {
+	// obteniendo variables de request
+	body := &validations.UpdateMachineParams{}
+	d := c.Request().Body
+	_ = json.NewDecoder(d).Decode(body)
+	defer d.Close()
+	// obteniendo maquina
+	machine, err := models.GetMachineById(body.MachineId)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo obtener la maquina", err.Error()))
+	}
+	// actualizando maquina
+	machine.CompanyId = body.CompanyId
+	machine.MachineTypeId = body.MachineTypeId
+	machine.BrandId = body.BrandId
+	machine.Serial = body.Serial
+	machine.Model = body.Model
+	// cnsultando
+	err = models.UpdateMachine(machine)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo actualizar la maquina", err.Error()))
+	}
+
+	return c.JSON(200, config.SetRes(200, "La maquina serial#"+body.Serial+" se ha actualizado"))
 }

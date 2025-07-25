@@ -14,13 +14,13 @@ import (
 type (
 	NewMaterialParams struct {
 		ServiceId string `json:"service_id" validate:"required,mongodb"`
-		Name      string `json:"name" validate:"required,startsnotwith= ,endsnotwith= ,min=3,max=30"`
+		Name      string `json:"name" validate:"required,startsnotwith= ,endsnotwith= ,min=3,max=50"`
 		Number    int    `json:"number" validate:"required,number,gt=0"`
 		Price     int    `json:"price" validate:"required,number,gte=0"`
 	}
 	UpdateMaterialParams struct {
 		MaterialId string `json:"material_id" validate:"required,mongodb"`
-		Name       string `json:"name" validate:"required,startsnotwith= ,endsnotwith= ,min=3,max=30"`
+		Name       string `json:"name" validate:"required,startsnotwith= ,endsnotwith= ,min=3,max=50"`
 		Number     int    `json:"number" validate:"required,number,gt=0"`
 		Price      int    `json:"price" validate:"required,number,gte=0"`
 	}
@@ -41,14 +41,14 @@ func CreateMaterialValidate(next echo.HandlerFunc) echo.HandlerFunc {
 		// realizando valdacion
 		validate := validator.New()
 		if err := validate.Struct(v); err != nil {
-			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos.", err.Error()))
+			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos", err.Error()))
 		}
 		// verificando que el id exista
 		if !models.ExistsServiceById(v.ServiceId) {
 			return c.JSON(400, config.SetResError(400, "Error: el id del servicio no existe", ""))
 		}
 		// verificando que el servicio este activo
-		if !models.IsActiveService(v.ServiceId) {
+		if !models.IsActiveServiceById(v.ServiceId) {
 			return c.JSON(400, config.SetResError(400, "Error: el servicio no esta activo", ""))
 		}
 		// fin del middleware
@@ -69,7 +69,7 @@ func UpdateMaterialValidate(next echo.HandlerFunc) echo.HandlerFunc {
 		// realizando valdacion
 		validate := validator.New()
 		if err := validate.Struct(v); err != nil {
-			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos.", err.Error()))
+			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos", err.Error()))
 		}
 		// verificando que el id exista
 		if !models.ExistsMaterialById(v.MaterialId) {
@@ -90,7 +90,7 @@ func GetMaterialsValidate(next echo.HandlerFunc) echo.HandlerFunc {
 		// realizando valdacion
 		validate := validator.New()
 		if err := validate.Struct(v); err != nil {
-			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos.", err.Error()))
+			return c.JSON(400, config.SetResError(400, "Error: Valores invalidos", err.Error()))
 		}
 		// verificando que el id exista
 		if !models.ExistsServiceById(v.ServiceId) {

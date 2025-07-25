@@ -18,10 +18,10 @@ func NewMaterial(c echo.Context) error {
 	// creando material
 	err := models.CreateMaterial(body.ServiceId, body.Name, body.Price, body.Number)
 	if err != nil {
-		return c.JSON(500, config.SetResError(500, "No se creo el material", err.Error()))
+		return c.JSON(500, config.SetResError(500, "Error: No se pudo crear el material", err.Error()))
 	}
 
-	return c.JSON(200, config.SetRes(200, "El material: "+body.Name+" se ha creado"))
+	return c.JSON(200, config.SetRes(200, "El material: '"+body.Name+"' se ha creado"))
 }
 
 func UpdateMaterial(c echo.Context) error {
@@ -30,9 +30,17 @@ func UpdateMaterial(c echo.Context) error {
 	d := c.Request().Body
 	_ = json.NewDecoder(d).Decode(body)
 	defer d.Close()
-
+	// obteniendo material
+	material, err := models.GetMaterialById(body.MaterialId)
+	if err != nil {
+		return c.JSON(500, config.SetResError(500, "No se pudo obtener el material", err.Error()))
+	}
+	// actualizando material
+	material.Name = body.Name
+	material.Price = body.Price
+	material.Number = body.Number
 	// creando material
-	err := models.UpdateMaterial(body.MaterialId, body.Name, body.Price, body.Number)
+	err = models.UpdateMaterial(material)
 	if err != nil {
 		return c.JSON(500, config.SetResError(500, "No se pudo actualizar el material", err.Error()))
 	}

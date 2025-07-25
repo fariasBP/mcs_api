@@ -40,13 +40,6 @@ const (
 	Finish    Status2Service = 3 // finalizado (status: 4, 5)
 )
 
-// type Record struct {
-// 	Protocol    string         `json:"protocol" bson:"protocol,omitempty"`
-// 	Status      StatusProtocol `json:"status" bson:"status,omitempty"`
-// 	Price       int            `json:"price" bson:"price,omitempty"`
-// 	Observation string         `json:"observation" bson:"observation,omitempty"`
-// }
-
 type (
 	Service struct {
 		ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
@@ -100,22 +93,7 @@ func ExistsServiceById(id string) bool {
 	return err == nil
 }
 
-func ExistsServiceActiveFromMachineById(idMachine string) bool {
-	// conectando a la base de datos
-	ctx, client, coll := config.ConnectColl("services")
-	defer client.Disconnect(ctx)
-	// buscando servicio
-	service := &Service{}
-	query := bson.M{"machine_id": idMachine, "$or": []bson.M{
-		bson.M{"status": bson.M{"$gte": 0, "$lt": 4}},
-		bson.M{"status": nil},
-	}}
-	err := coll.FindOne(ctx, query).Decode(service)
-
-	return err == nil
-}
-
-func IsActiveService(id string) bool {
+func IsActiveServiceById(id string) bool {
 	// conectando a la base de datos
 	ctx, client, coll := config.ConnectColl("services")
 	defer client.Disconnect(ctx)
@@ -126,13 +104,34 @@ func IsActiveService(id string) bool {
 	}
 	// buscando servicio
 	service := &Service{}
-	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(service)
-	// verificando
-	if err == nil && service.Status > 0 && service.Status < 4 {
-		return true
-	}
+	query := bson.M{"$and": []bson.M{
+		{"_id": idObj},
+		{"$or": []bson.M{
+			{"status": bson.M{"$gte": 0, "$lt": 4}},
+			{"status": nil},
+		}},
+	}}
+	err = coll.FindOne(ctx, query).Decode(service)
 
-	return false
+	return err == nil
+}
+
+func IsActiveService(idMachine string) bool {
+	// conectando a la base de datos
+	ctx, client, coll := config.ConnectColl("services")
+	defer client.Disconnect(ctx)
+	// buscando servicio
+	service := &Service{}
+	query := bson.M{"$and": []bson.M{
+		{"machine_id": idMachine},
+		{"$or": []bson.M{
+			{"status": bson.M{"$gte": 0, "$lt": 4}},
+			{"status": nil},
+		}},
+	}}
+	err := coll.FindOne(ctx, query).Decode(service)
+
+	return err == nil
 }
 
 func SleepService(id string) error {

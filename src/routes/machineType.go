@@ -10,6 +10,7 @@ import (
 
 func MachineType(e *echo.Group) {
 	router := e.Group("/machinetype", middlewares.ValidateToken)
-	router.POST("/new", controllers.NewMachineType, validations.NewMachineTypeValidate)
-	router.GET("/search", controllers.GetMachineTypes, validations.GetMachineTypesValidate)
+	router.POST("/new", controllers.NewMachineType, validations.NewMachineTypeValidate, middlewares.IsGTEtoAdmin)
+	router.GET("/search", controllers.GetMachineTypes, validations.GetMachineTypesValidate, middlewares.IsGTEtoOperator)
+	router.PUT("/update", controllers.UpdateMachineType, validations.UpdateMachineTypeValidate, middlewares.IsGTEtoAdmin)
 }

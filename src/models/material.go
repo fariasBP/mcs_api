@@ -2,6 +2,7 @@ package models
 
 import (
 	"mcs_api/src/config"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
@@ -9,6 +10,8 @@ import (
 
 type Material struct {
 	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	CreatedAt  primitive.DateTime `json:"created_at" bson:"created_at"`
+	UpdatedAt  primitive.DateTime `json:"updated_at" bson:"updated_at"`
 	SeriviceId string             `json:"service_id" bson:"service_id,omitempty"`
 	Name       string             `json:"name" bson:"name,omitempty"`
 	Price      int                `json:"price" bson:"price,omitempty"`
@@ -22,6 +25,8 @@ func CreateMaterial(idService, name string, price int, number int) error {
 	// insertando
 	newMaterial := &Material{
 		SeriviceId: idService,
+		CreatedAt:  primitive.NewDateTimeFromTime(time.Now().UTC()),
+		UpdatedAt:  primitive.NewDateTimeFromTime(time.Now().UTC()),
 		Name:       name,
 		Price:      price,
 		Number:     number,
@@ -29,6 +34,22 @@ func CreateMaterial(idService, name string, price int, number int) error {
 	_, err := coll.InsertOne(ctx, newMaterial)
 
 	return err
+}
+
+func GetMaterialById(id string) (*Material, error) {
+	// conectando a la bbdd
+	ctx, client, coll := config.ConnectColl("materials")
+	defer client.Disconnect(ctx)
+	// obteniendo id
+	idObj, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	// buscando material
+	material := &Material{}
+	err = coll.FindOne(ctx, bson.M{"_id": idObj}).Decode(material)
+
+	return material, err
 }
 
 func ExistsMaterialById(id string) bool {
@@ -46,18 +67,13 @@ func ExistsMaterialById(id string) bool {
 	return err == nil
 }
 
-func UpdateMaterial(idMaterial, name string, price, number int) error {
+func UpdateMaterial(material *Material) error {
 	// conectando a la bbdd
 	ctx, client, coll := config.ConnectColl("materials")
 	defer client.Disconnect(ctx)
-	// obteniendo id
-	id, err := primitive.ObjectIDFromHex(idMaterial)
-	if err != nil {
-		return err
-	}
 	// actualizando material
-	update := bson.M{"$set": bson.M{"name": name, "price": price, "number": number}}
-	_, err = coll.UpdateOne(ctx, bson.M{"_id": id}, update)
+	material.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())
+	_, err := coll.UpdateOne(ctx, bson.M{"_id": material.ID}, bson.M{"$set": material})
 
 	return err
 }
